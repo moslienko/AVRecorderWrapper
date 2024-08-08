@@ -3,24 +3,23 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		95895BE02C5B2FC1000D0B1C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95895BDF2C5B2FC1000D0B1C /* AppDelegate.swift */; };
 		95895BE22C5B2FC1000D0B1C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95895BE12C5B2FC1000D0B1C /* SceneDelegate.swift */; };
-		95895BE42C5B2FC1000D0B1C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95895BE32C5B2FC1000D0B1C /* ViewController.swift */; };
-		95895BE72C5B2FC1000D0B1C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 95895BE52C5B2FC1000D0B1C /* Main.storyboard */; };
+		95895BE42C5B2FC1000D0B1C /* RecorderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95895BE32C5B2FC1000D0B1C /* RecorderViewController.swift */; };
 		95895BE92C5B2FC2000D0B1C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95895BE82C5B2FC2000D0B1C /* Assets.xcassets */; };
 		95895BEC2C5B2FC2000D0B1C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 95895BEA2C5B2FC2000D0B1C /* LaunchScreen.storyboard */; };
+		95895BF52C5B31CD000D0B1C /* AVRecorderWrapper in Frameworks */ = {isa = PBXBuildFile; productRef = 95895BF42C5B31CD000D0B1C /* AVRecorderWrapper */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		95895BDC2C5B2FC1000D0B1C /* AVRecorderWrapperExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AVRecorderWrapperExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95895BDF2C5B2FC1000D0B1C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		95895BE12C5B2FC1000D0B1C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		95895BE32C5B2FC1000D0B1C /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		95895BE62C5B2FC1000D0B1C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		95895BE32C5B2FC1000D0B1C /* RecorderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecorderViewController.swift; sourceTree = "<group>"; };
 		95895BE82C5B2FC2000D0B1C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		95895BEB2C5B2FC2000D0B1C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		95895BED2C5B2FC2000D0B1C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -31,12 +30,40 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95895BF52C5B31CD000D0B1C /* AVRecorderWrapper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		952A1CF12C64848800D30E50 /* Presentation */ = {
+			isa = PBXGroup;
+			children = (
+				952A1CF22C64849500D30E50 /* Recorder */,
+			);
+			path = Presentation;
+			sourceTree = "<group>";
+		};
+		952A1CF22C64849500D30E50 /* Recorder */ = {
+			isa = PBXGroup;
+			children = (
+				95895BE32C5B2FC1000D0B1C /* RecorderViewController.swift */,
+			);
+			path = Recorder;
+			sourceTree = "<group>";
+		};
+		952A1CF32C6485AF00D30E50 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				95895BDF2C5B2FC1000D0B1C /* AppDelegate.swift */,
+				95895BE12C5B2FC1000D0B1C /* SceneDelegate.swift */,
+				95895BE82C5B2FC2000D0B1C /* Assets.xcassets */,
+				95895BEA2C5B2FC2000D0B1C /* LaunchScreen.storyboard */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
 		95895BD32C5B2FC1000D0B1C = {
 			isa = PBXGroup;
 			children = (
@@ -56,12 +83,8 @@
 		95895BDE2C5B2FC1000D0B1C /* AVRecorderWrapperExample */ = {
 			isa = PBXGroup;
 			children = (
-				95895BDF2C5B2FC1000D0B1C /* AppDelegate.swift */,
-				95895BE12C5B2FC1000D0B1C /* SceneDelegate.swift */,
-				95895BE32C5B2FC1000D0B1C /* ViewController.swift */,
-				95895BE52C5B2FC1000D0B1C /* Main.storyboard */,
-				95895BE82C5B2FC2000D0B1C /* Assets.xcassets */,
-				95895BEA2C5B2FC2000D0B1C /* LaunchScreen.storyboard */,
+				952A1CF32C6485AF00D30E50 /* Application */,
+				952A1CF12C64848800D30E50 /* Presentation */,
 				95895BED2C5B2FC2000D0B1C /* Info.plist */,
 			);
 			path = AVRecorderWrapperExample;
@@ -83,6 +106,9 @@
 			dependencies = (
 			);
 			name = AVRecorderWrapperExample;
+			packageProductDependencies = (
+				95895BF42C5B31CD000D0B1C /* AVRecorderWrapper */,
+			);
 			productName = AVRecorderWrapperExample;
 			productReference = 95895BDC2C5B2FC1000D0B1C /* AVRecorderWrapperExample.app */;
 			productType = "com.apple.product-type.application";
@@ -111,6 +137,9 @@
 				Base,
 			);
 			mainGroup = 95895BD32C5B2FC1000D0B1C;
+			packageReferences = (
+				95895BF32C5B31CD000D0B1C /* XCLocalSwiftPackageReference ".." */,
+			);
 			productRefGroup = 95895BDD2C5B2FC1000D0B1C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -127,7 +156,6 @@
 			files = (
 				95895BEC2C5B2FC2000D0B1C /* LaunchScreen.storyboard in Resources */,
 				95895BE92C5B2FC2000D0B1C /* Assets.xcassets in Resources */,
-				95895BE72C5B2FC1000D0B1C /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,7 +166,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				95895BE42C5B2FC1000D0B1C /* ViewController.swift in Sources */,
+				95895BE42C5B2FC1000D0B1C /* RecorderViewController.swift in Sources */,
 				95895BE02C5B2FC1000D0B1C /* AppDelegate.swift in Sources */,
 				95895BE22C5B2FC1000D0B1C /* SceneDelegate.swift in Sources */,
 			);
@@ -147,14 +175,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		95895BE52C5B2FC1000D0B1C /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				95895BE62C5B2FC1000D0B1C /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		95895BEA2C5B2FC2000D0B1C /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -297,7 +317,7 @@
 				INFOPLIST_FILE = AVRecorderWrapperExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -325,7 +345,7 @@
 				INFOPLIST_FILE = AVRecorderWrapperExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -363,6 +383,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		95895BF32C5B31CD000D0B1C /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		95895BF42C5B31CD000D0B1C /* AVRecorderWrapper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AVRecorderWrapper;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 95895BD42C5B2FC1000D0B1C /* Project object */;
 }

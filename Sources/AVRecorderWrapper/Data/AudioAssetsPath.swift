@@ -11,7 +11,7 @@ public enum AudioAssetsPath {
     case byPath(_ path: URL)
     case temp(fileName: String)
     
-    var path: URL? {
+    public var path: URL? {
         switch self {
         case let .byPath(path):
             return path

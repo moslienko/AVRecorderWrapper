@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "appviewutilits",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/moslienko/AppViewUtilits.git",
+      "state" : {
+        "revision" : "e9a32302e27c2890033c7e5a464bd581a652d9c3",
+        "version" : "1.2.6"
+      }
+    }
+  ],
+  "version" : 2
+}

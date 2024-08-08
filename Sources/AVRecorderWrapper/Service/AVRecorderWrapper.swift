@@ -44,10 +44,8 @@ public class AudioRecordManager: UIView {
     // MARK: - Callbacks
     public var didStartRecording: Callback?
     public var didFinishRecording: Callback?
-    public var updateState: DataCallback<RecorderState>?
-    public var updateTime: DataCallback<Double>?
-    
-    //".m4a"
+    public var didUpdateState: DataCallback<RecorderState>?
+    public var didUpdateTime: DataCallback<Double>?
 }
 
 // MARK: - Public methods
@@ -61,13 +59,13 @@ public extension AudioRecordManager {
     func setObservers(
         didStartRecording: Callback?,
         didFinishRecording: Callback?,
-        updateState: DataCallback<RecorderState>?,
-        updateTime: DataCallback<Double>?
+        didUpdateState: DataCallback<RecorderState>?,
+        didUpdateTime: DataCallback<Double>?
     ) {
         self.didStartRecording = didStartRecording
         self.didFinishRecording = didFinishRecording
-        self.updateState = updateState
-        self.updateTime = updateTime
+        self.didUpdateState = didUpdateState
+        self.didUpdateTime = didUpdateTime
     }
     
     func checkPermission(grantedCallback: DataCallback<Bool>?) {
@@ -95,6 +93,7 @@ public extension AudioRecordManager {
                 self.startRecord()
             } else {
                 self.delegate?.updateState(.denied)
+                self.didUpdateState?(.denied)
             }
         })
     }
@@ -105,6 +104,7 @@ public extension AudioRecordManager {
                 self.continueRecord()
             } else {
                 self.delegate?.updateState(.denied)
+                self.didUpdateState?(.denied)
             }
         })
     }
@@ -115,6 +115,9 @@ public extension AudioRecordManager {
         self.delegate?.didFinishRecording()
         self.delegate?.updateState(.stopped)
         
+        self.didFinishRecording?()
+        self.didUpdateState?(.stopped)
+
         self.path = nil
         self.timer?.invalidate()
         try? self.recordingSession.setCategory(.playback, mode: .default)
@@ -128,6 +131,7 @@ public extension AudioRecordManager {
         self.audioRecorder?.pause()
         self.timer?.invalidate()
         self.delegate?.updateState(.paused)
+        self.didUpdateState?(.paused)
     }
     
     func finishRecording() {
@@ -157,6 +161,9 @@ private extension AudioRecordManager {
             self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.updateDuration), userInfo: nil, repeats: true)
             self.delegate?.didStartRecording()
             self.delegate?.updateState(.recording)
+            
+            self.didStartRecording?()
+            self.didUpdateState?(.recording)
         } catch {
             print("failed start session")
             finishRecording()
@@ -169,6 +176,9 @@ private extension AudioRecordManager {
         self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.updateDuration), userInfo: nil, repeats: true)
         self.delegate?.updateState(.recording)
         self.delegate?.updateState(.continued)
+        
+        self.didUpdateState?(.recording)
+        self.didUpdateState?(.continued)
     }
     
     /// Handle interruption
@@ -197,6 +207,7 @@ private extension AudioRecordManager {
             let seconds = Int(self.audioRecorder?.currentTime ?? .zero)
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.updateTime(seconds: Double(seconds))
+                self?.didUpdateTime?(Double(seconds))
             }
         } else{
             self.timer?.invalidate()
