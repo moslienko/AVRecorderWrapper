@@ -161,6 +161,18 @@ class RecorderViewController: UIViewController {
             },
             didUpdateTime: { time in
                 self.durationLabel.text = time.asString(style: .short)
+            },
+            didHandleRecorderError: { error in
+                switch error {
+                case .missingFilePath:
+                    print("Missing patch")
+                case let .systemError(err):
+                    print("Error - \(err.localizedDescription)")
+                case .failedStartAudioSession:
+                    print("Failed start session")
+                case .unknownError:
+                    print("Unknown error")
+                }
             }
         )
     }

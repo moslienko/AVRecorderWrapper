@@ -27,6 +27,10 @@ public protocol AVRecorderWrapperDelegate: AnyObject {
     /// Called to update the elapsed recording time.
     /// - Parameter seconds: The current recording time in seconds.
     func updateTime(seconds: Double)
+    
+    /// Called when an error is received during the audio recording process.
+    /// - Parameter error: Error encountered.
+    func handleRecorderError(_ error: RecorderError)
 }
 
 /// A wrapper class that provides an interface for managing audio recording using `AVAudioRecorder`.
@@ -84,6 +88,9 @@ public class AVRecorderWrapper: UIView {
     
     /// A callback that is triggered to update the elapsed recording time.
     public var didUpdateTime: DataCallback<Double>?
+    
+    /// A callback that is triggered when an error is received during the audio recording process.
+    public var didHandleRecorderError: DataCallback<RecorderError>?
 }
 
 // MARK: - Public methods
@@ -104,16 +111,19 @@ public extension AVRecorderWrapper {
     ///   - didFinishRecording: A callback triggered when recording finishes.
     ///   - didUpdateState: A callback triggered to update the recorder state.
     ///   - didUpdateTime: A callback triggered to update the elapsed recording time.
+    ///   - didHandleRecorderError: A callback that is triggered when an error is received during the audio recording process.
     func setObservers(
         didStartRecording: Callback?,
         didFinishRecording: Callback?,
         didUpdateState: DataCallback<RecorderState>?,
-        didUpdateTime: DataCallback<Double>?
+        didUpdateTime: DataCallback<Double>?,
+        didHandleRecorderError: DataCallback<RecorderError>?
     ) {
         self.didStartRecording = didStartRecording
         self.didFinishRecording = didFinishRecording
         self.didUpdateState = didUpdateState
         self.didUpdateTime = didUpdateTime
+        self.didHandleRecorderError = didHandleRecorderError
     }
     
     /// Checks the user's permission to record audio and returns the result via a callback.
@@ -163,16 +173,18 @@ public extension AVRecorderWrapper {
     
     /// Stops the recording process.
     func stopRecording() {
-        self.finishRecording()
-        self.path = nil
-        self.timer?.invalidate()
-        try? self.recordingSession.setCategory(.playback, mode: .default)
+        audioRecorder?.stop()
+        audioRecorder = nil
+                        
+        timer?.invalidate()
+        try? recordingSession.setCategory(.playback, mode: .default)
         
-        self.delegate?.didFinishRecording()
-        self.delegate?.updateState(.stopped)
+        // Send events
+        delegate?.didFinishRecording()
+        delegate?.updateState(.stopped)
         
-        self.didFinishRecording?()
-        self.didUpdateState?(.stopped)
+        didFinishRecording?()
+        didUpdateState?(.stopped)
     }
     
     /// Pauses or continues the recording depending on the current state.
@@ -190,12 +202,6 @@ public extension AVRecorderWrapper {
         self.delegate?.updateState(.paused)
         self.didUpdateState?(.paused)
     }
-    
-    /// Finalizes and stops the current recording session.
-    func finishRecording() {
-        audioRecorder?.stop()
-        audioRecorder = nil
-    }
 }
 
 // MARK: - Private methods
@@ -204,6 +210,8 @@ private extension AVRecorderWrapper {
     /// Starts the audio recording process.
     func startRecord() {
         guard let path = self.path?.path else {
+            self.delegate?.handleRecorderError(.missingFilePath)
+            self.didHandleRecorderError?(.missingFilePath)
             return
         }
         // Start audio recording
@@ -225,7 +233,10 @@ private extension AVRecorderWrapper {
             self.didUpdateState?(.recording)
         } catch {
             print("failed start session")
-            finishRecording()
+            stopRecording()
+            
+            self.delegate?.handleRecorderError(.failedStartAudioSession)
+            self.didHandleRecorderError?(.failedStartAudioSession)
         }
     }
     
@@ -239,23 +250,6 @@ private extension AVRecorderWrapper {
         
         self.didUpdateState?(.recording)
         self.didUpdateState?(.continued)
-    }
-    
-    /// Handles interruptions during the recording process.
-    /// - Parameter notification: The notification that indicates an interruption.
-    @objc
-    func handleInterruption(notification: Notification) {
-        guard let userInfo = notification.userInfo else { return }
-        guard let key = userInfo[AVAudioSessionInterruptionTypeKey] as? NSNumber
-        else { return }
-        if key.intValue == 1 {
-            DispatchQueue.main.async {
-                print("handleInterruption -\(self.isRecording), save...")
-                if self.isRecording {
-                    self.stopRecording()
-                }
-            }
-        }
     }
     
     /// Updates the recording duration.
@@ -286,7 +280,17 @@ extension AVRecorderWrapper: AVAudioRecorderDelegate {
     ///   - error: The error that occurred.
     public func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         print("audioRecorderEncodeErrorDidOccur - \(String(describing: error?.localizedDescription))")
-        self.timer?.invalidate()
+        self.stopRecording()
+        
+        var err: RecorderError {
+            if let error = error {
+                return RecorderError.systemError(error)
+            }
+            return RecorderError.unknownError
+        }
+        
+        self.delegate?.handleRecorderError(err)
+        self.didHandleRecorderError?(err)
     }
     
     /// Called when the recording finishes successfully or fails.
@@ -296,8 +300,7 @@ extension AVRecorderWrapper: AVAudioRecorderDelegate {
     public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         print("audioRecorderDidFinishRecording successfully - \(flag)")
         if !flag {
-            finishRecording()
+            stopRecording()
         }
-        self.timer?.invalidate()
     }
 }
