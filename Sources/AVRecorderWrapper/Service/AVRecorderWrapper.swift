@@ -49,6 +49,11 @@ public class AVRecorderWrapper: UIView {
         self.audioRecorder?.isRecording ?? false
     }
     
+    /// Duration of the current recording
+    public var recordDuration: TimeInterval {
+        (self.audioRecorder?.currentTime ?? .zero) + self.currentTime
+    }
+    
     /// The file path where the recorded audio will be saved.
     private(set) public var path: AudioAssetsPath?
     
@@ -175,6 +180,7 @@ public extension AVRecorderWrapper {
     func stopRecording() {
         audioRecorder?.stop()
         audioRecorder = nil
+        currentTime = .zero
                         
         timer?.invalidate()
         try? recordingSession.setCategory(.playback, mode: .default)
@@ -189,7 +195,7 @@ public extension AVRecorderWrapper {
     
     /// Pauses or continues the recording depending on the current state.
     func pauseOrContinueRecord() {
-        self.isRecording ? self.pauseRecord() : self.continueRecord()
+        self.isRecording ? self.pauseRecord() : self.tryContinueRecord()
     }
     
     /// Pauses the recording process.
@@ -260,7 +266,7 @@ private extension AVRecorderWrapper {
             audioRecorder?.updateMeters()
             let averagePower = audioRecorder?.averagePower(forChannel: 0) ?? 0.0
             print("Average power: \(averagePower)")
-            let seconds = Int(self.audioRecorder?.currentTime ?? .zero) + Int(self.currentTime)
+            let seconds = Int(self.recordDuration)
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.updateTime(seconds: Double(seconds))
                 self?.didUpdateTime?(Double(seconds))
