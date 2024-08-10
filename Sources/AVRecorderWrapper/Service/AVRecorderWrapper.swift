@@ -11,30 +11,59 @@ import AVFoundation
 import Foundation
 import UIKit
 
-public protocol RecorderViewControllerDelegate: AnyObject {
+/// Defining the delegate methods for `AVRecorderWrapper`.
+public protocol AVRecorderWrapperDelegate: AnyObject {
+    
+    /// Called when recording has started.
     func didStartRecording()
+    
+    /// Called when recording has finished.
     func didFinishRecording()
+    
+    /// Called to update the state of the recorder.
+    /// - Parameter state: The current state of the recorder.
     func updateState(_ state: RecorderState)
+    
+    /// Called to update the elapsed recording time.
+    /// - Parameter seconds: The current recording time in seconds.
     func updateTime(seconds: Double)
 }
 
+/// A wrapper class that provides an interface for managing audio recording using `AVAudioRecorder`.
 public class AVRecorderWrapper: UIView {
     
+    /// A shared instance of `AVRecorderWrapper` for easy access.
     public static let shared = AVRecorderWrapper()
     
-    // MARK: - Params
-    public weak var delegate: RecorderViewControllerDelegate?
+    // MARK: - Parameters
+    
+    /// A delegate to receive recording updates.
+    public weak var delegate: AVRecorderWrapperDelegate?
+    
+    /// A boolean indicating whether the recorder is currently recording.
     public var isRecording: Bool {
         self.audioRecorder?.isRecording ?? false
     }
     
+    /// The file path where the recorded audio will be saved.
     private(set) public var path: AudioAssetsPath?
+    
+    /// The audio session used for managing audio recording.
     private var recordingSession: AVAudioSession = AVAudioSession.sharedInstance()
+    
+    /// The `AVAudioRecorder` instance used for recording audio.
     private var audioRecorder: AVAudioRecorder?
-    private var audioPlayer: AVAudioPlayer?
+    
+    /// A timer to track the recording duration.
     private var timer: Timer?
+    
+    /// The current recording time.
     private var currentTime: TimeInterval = TimeInterval()
+    
+    /// A dictionary containing the recorder settings.
     private var recorderSettings: [String: Any] = [:]
+    
+    /// The default settings used for recording audio.
     private var defaultRecorderSettings = [
         AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
         AVSampleRateKey: 12000,
@@ -43,20 +72,38 @@ public class AVRecorderWrapper: UIView {
     ]
     
     // MARK: - Callbacks
+    
+    /// A callback that is triggered when recording starts.
     public var didStartRecording: Callback?
+    
+    /// A callback that is triggered when recording finishes.
     public var didFinishRecording: Callback?
+    
+    /// A callback that is triggered to update the recorder state.
     public var didUpdateState: DataCallback<RecorderState>?
+    
+    /// A callback that is triggered to update the elapsed recording time.
     public var didUpdateTime: DataCallback<Double>?
 }
 
 // MARK: - Public methods
 public extension AVRecorderWrapper {
     
+    /// Init recording audio params.
+    /// - Parameters:
+    ///   - path: The file path where the recorded audio will be saved.
+    ///   - recorderSettings: The settings used for the audio recorder. If not provided, default settings will be used.
     func start(path: AudioAssetsPath, recorderSettings: [String: Any] = [:]) {
         self.path = path
         self.recorderSettings = recorderSettings.isEmpty ? self.defaultRecorderSettings : recorderSettings
     }
     
+    /// Sets up the observers for recording callbacks.
+    /// - Parameters:
+    ///   - didStartRecording: A callback triggered when recording starts.
+    ///   - didFinishRecording: A callback triggered when recording finishes.
+    ///   - didUpdateState: A callback triggered to update the recorder state.
+    ///   - didUpdateTime: A callback triggered to update the elapsed recording time.
     func setObservers(
         didStartRecording: Callback?,
         didFinishRecording: Callback?,
@@ -69,6 +116,8 @@ public extension AVRecorderWrapper {
         self.didUpdateTime = didUpdateTime
     }
     
+    /// Checks the user's permission to record audio and returns the result via a callback.
+    /// - Parameter grantedCallback: A callback triggered with the result of the permission check.
     func checkPermission(grantedCallback: DataCallback<Bool>?) {
         let permission = recordingSession.recordPermission
         print("permission - \(permission)")
@@ -88,6 +137,7 @@ public extension AVRecorderWrapper {
         }
     }
     
+    /// Attempts to start recording.
     func tryStartRecord() {
         checkPermission(grantedCallback: { isGranted in
             if isGranted {
@@ -99,6 +149,7 @@ public extension AVRecorderWrapper {
         })
     }
     
+    /// Attempts to continue recording.
     func tryContinueRecord() {
         checkPermission(grantedCallback: { isGranted in
             if isGranted {
@@ -110,8 +161,8 @@ public extension AVRecorderWrapper {
         })
     }
     
+    /// Stops the recording process.
     func stopRecording() {
-        print("stopRecording...")
         self.finishRecording()
         self.path = nil
         self.timer?.invalidate()
@@ -124,10 +175,12 @@ public extension AVRecorderWrapper {
         self.didUpdateState?(.stopped)
     }
     
+    /// Pauses or continues the recording depending on the current state.
     func pauseOrContinueRecord() {
         self.isRecording ? self.pauseRecord() : self.continueRecord()
     }
     
+    /// Pauses the recording process.
     func pauseRecord() {
         self.audioRecorder?.pause()
         if let time = self.audioRecorder?.currentTime {
@@ -138,6 +191,7 @@ public extension AVRecorderWrapper {
         self.didUpdateState?(.paused)
     }
     
+    /// Finalizes and stops the current recording session.
     func finishRecording() {
         audioRecorder?.stop()
         audioRecorder = nil
@@ -147,8 +201,8 @@ public extension AVRecorderWrapper {
 // MARK: - Private methods
 private extension AVRecorderWrapper {
     
+    /// Starts the audio recording process.
     func startRecord() {
-        print("startRecord \(self.path?.path)")
         guard let path = self.path?.path else {
             return
         }
@@ -175,6 +229,7 @@ private extension AVRecorderWrapper {
         }
     }
     
+    /// Continues a paused recording session.
     func continueRecord() {
         self.audioRecorder?.record()
         
@@ -186,7 +241,8 @@ private extension AVRecorderWrapper {
         self.didUpdateState?(.continued)
     }
     
-    /// Handle interruption
+    /// Handles interruptions during the recording process.
+    /// - Parameter notification: The notification that indicates an interruption.
     @objc
     func handleInterruption(notification: Notification) {
         guard let userInfo = notification.userInfo else { return }
@@ -202,6 +258,7 @@ private extension AVRecorderWrapper {
         }
     }
     
+    /// Updates the recording duration.
     @objc
     func updateDuration() {
         print("updateDuration, isRecording - \(self.isRecording), seconds \(Int(self.audioRecorder?.currentTime ?? .zero)), saved - \(self.currentTime)")
@@ -214,7 +271,7 @@ private extension AVRecorderWrapper {
                 self?.delegate?.updateTime(seconds: Double(seconds))
                 self?.didUpdateTime?(Double(seconds))
             }
-        } else{
+        } else {
             self.timer?.invalidate()
         }
     }
@@ -223,11 +280,19 @@ private extension AVRecorderWrapper {
 // MARK: - AVAudioRecorderDelegate
 extension AVRecorderWrapper: AVAudioRecorderDelegate {
     
+    /// Called when an encoding error occurs during recording.
+    /// - Parameters:
+    ///   - recorder: The recorder that encountered an error.
+    ///   - error: The error that occurred.
     public func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         print("audioRecorderEncodeErrorDidOccur - \(String(describing: error?.localizedDescription))")
         self.timer?.invalidate()
     }
     
+    /// Called when the recording finishes successfully or fails.
+    /// - Parameters:
+    ///   - recorder: The recorder that finished recording.
+    ///   - flag: A boolean indicating whether the recording was successful.
     public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         print("audioRecorderDidFinishRecording successfully - \(flag)")
         if !flag {

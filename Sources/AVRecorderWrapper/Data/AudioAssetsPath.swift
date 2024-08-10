@@ -7,10 +7,14 @@
 
 import Foundation
 
+/// File path value to create the audio file
 public enum AudioAssetsPath {
+    /// Save the file to the specified directory
     case byPath(_ path: URL)
+    /// Save the file to a temporary directory under a specific name
     case temp(fileName: String)
     
+    /// Get file path
     public var path: URL? {
         switch self {
         case let .byPath(path):
