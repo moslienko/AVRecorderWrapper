@@ -29,8 +29,7 @@ extension DecorateWrapper where Element: UIButton {
 
 class RecorderViewController: UIViewController {
     
-    private let recordWrapper = AudioRecordManager.shared
-    private var path: URL?
+    private let recordWrapper = AVRecorderWrapper.shared
     
     private lazy var permissionButton: UIButton = {
         let button = AppButton(title: "Request permission")
@@ -73,8 +72,8 @@ class RecorderViewController: UIViewController {
             guard let self = self else {
                 return
             }
-            print("path - \(self.path?.absoluteString)")
-            self.filePathLabel.text = self.path?.absoluteString
+            print("path - \(self.recordWrapper.isRecording)")
+            self.filePathLabel.text = self.recordWrapper.path?.path?.absoluteString
             
             if self.recordWrapper.isRecording {
                 self.recordWrapper.pauseOrContinueRecord()
@@ -141,10 +140,7 @@ class RecorderViewController: UIViewController {
                 self.stopRecordButton.isHidden = true
                 self.durationLabel.text = ""
                 
-                self.recordWrapper.start(
-                    path: .temp(fileName: "\(Date().timeIntervalSince1970).m4a"),
-                    settings: [:]
-                )
+                self.recordWrapper.start(path: .temp(fileName: "\(Date().timeIntervalSince1970).m4a"))
             },
             didUpdateState: { state in
                 print("updateState...\(state)")
@@ -180,6 +176,10 @@ private extension RecorderViewController {
         view.addSubview(mainStack)
         layoutUI()
         self.buttonsStack.isHidden = true
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(pathLabelTapped(_:)))
+        self.filePathLabel.isUserInteractionEnabled = true
+        self.filePathLabel.addGestureRecognizer(tapGesture)
     }
     
     func layoutUI() {
@@ -194,9 +194,20 @@ private extension RecorderViewController {
             mainStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
             mainStack.trailingAnchor.constraint(greaterThanOrEqualTo: view.trailingAnchor, constant: -20),
             mainStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 30),
-            mainStack.bottomAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 44),
+            mainStack.bottomAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -44),
         ])
     }
+    
+    @objc
+    func pathLabelTapped(_ sender: UITapGestureRecognizer) {
+        guard let label = sender.view as? UILabel else {
+            return
+        }
+        UIPasteboard.general.string = label.text
+        
+        let alert = UIAlertController(title: "The path was copied", message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Okay", style: .cancel))
+        present(alert, animated: true)    }
 }
 
 // MARK: - Module methods
@@ -214,12 +225,7 @@ private extension RecorderViewController {
                 self.buttonsStack.isHidden = !isGranted
                 
                 if isGranted {
-                    self.recordWrapper.start(
-                        path: .temp(fileName: "\(Date().timeIntervalSince1970).m4a"),
-                        settings: [:]
-                    )
-                    
-                    self.path = self.recordWrapper.path?.path
+                    self.recordWrapper.start(path: .temp(fileName: "\(Date().timeIntervalSince1970).m4a"))
                     self.startPauseRecordButton.setImage(UIImage(systemName: "record.circle"), for: [])
                     self.stopRecordButton.isHidden = !self.recordWrapper.isRecording
                 }

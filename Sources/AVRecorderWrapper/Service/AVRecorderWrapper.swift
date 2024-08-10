@@ -1,5 +1,5 @@
 //
-//  AudioRecordManager.swift
+//  AVRecorderWrapper.swift
 //
 //
 //  Created by Pavel Moslienko on 01.08.2024.
@@ -18,9 +18,9 @@ public protocol RecorderViewControllerDelegate: AnyObject {
     func updateTime(seconds: Double)
 }
 
-public class AudioRecordManager: UIView {
+public class AVRecorderWrapper: UIView {
     
-    public static let shared = AudioRecordManager()
+    public static let shared = AVRecorderWrapper()
     
     // MARK: - Params
     public weak var delegate: RecorderViewControllerDelegate?
@@ -33,8 +33,9 @@ public class AudioRecordManager: UIView {
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
-    private var settings: [String: Any] = [:]
-    private var defaultSettings = [
+    private var currentTime: TimeInterval = TimeInterval()
+    private var recorderSettings: [String: Any] = [:]
+    private var defaultRecorderSettings = [
         AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
         AVSampleRateKey: 12000,
         AVNumberOfChannelsKey: 1,
@@ -49,11 +50,11 @@ public class AudioRecordManager: UIView {
 }
 
 // MARK: - Public methods
-public extension AudioRecordManager {
+public extension AVRecorderWrapper {
     
-    func start(path: AudioAssetsPath, settings: [String: Any]) {
+    func start(path: AudioAssetsPath, recorderSettings: [String: Any] = [:]) {
         self.path = path
-        self.settings = settings.isEmpty ? self.defaultSettings : settings
+        self.recorderSettings = recorderSettings.isEmpty ? self.defaultRecorderSettings : recorderSettings
     }
     
     func setObservers(
@@ -112,15 +113,15 @@ public extension AudioRecordManager {
     func stopRecording() {
         print("stopRecording...")
         self.finishRecording()
+        self.path = nil
+        self.timer?.invalidate()
+        try? self.recordingSession.setCategory(.playback, mode: .default)
+        
         self.delegate?.didFinishRecording()
         self.delegate?.updateState(.stopped)
         
         self.didFinishRecording?()
         self.didUpdateState?(.stopped)
-
-        self.path = nil
-        self.timer?.invalidate()
-        try? self.recordingSession.setCategory(.playback, mode: .default)
     }
     
     func pauseOrContinueRecord() {
@@ -129,6 +130,9 @@ public extension AudioRecordManager {
     
     func pauseRecord() {
         self.audioRecorder?.pause()
+        if let time = self.audioRecorder?.currentTime {
+            self.currentTime += time
+        }
         self.timer?.invalidate()
         self.delegate?.updateState(.paused)
         self.didUpdateState?(.paused)
@@ -141,9 +145,10 @@ public extension AudioRecordManager {
 }
 
 // MARK: - Private methods
-private extension AudioRecordManager {
+private extension AVRecorderWrapper {
     
     func startRecord() {
+        print("startRecord \(self.path?.path)")
         guard let path = self.path?.path else {
             return
         }
@@ -152,7 +157,7 @@ private extension AudioRecordManager {
             try recordingSession.setCategory(.playAndRecord, mode: .default)
             try recordingSession.setActive(true)
             
-            audioRecorder = try AVAudioRecorder(url: path, settings: self.settings)
+            audioRecorder = try AVAudioRecorder(url: path, settings: self.recorderSettings)
             audioRecorder?.delegate = self
             audioRecorder?.isMeteringEnabled = true
             audioRecorder?.prepareToRecord()
@@ -199,12 +204,12 @@ private extension AudioRecordManager {
     
     @objc
     func updateDuration() {
-        print("updateDuration, isRecording - \(self.isRecording), seconds \(Int(self.audioRecorder?.currentTime ?? .zero))")
+        print("updateDuration, isRecording - \(self.isRecording), seconds \(Int(self.audioRecorder?.currentTime ?? .zero)), saved - \(self.currentTime)")
         if self.isRecording {
             audioRecorder?.updateMeters()
             let averagePower = audioRecorder?.averagePower(forChannel: 0) ?? 0.0
             print("Average power: \(averagePower)")
-            let seconds = Int(self.audioRecorder?.currentTime ?? .zero)
+            let seconds = Int(self.audioRecorder?.currentTime ?? .zero) + Int(self.currentTime)
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.updateTime(seconds: Double(seconds))
                 self?.didUpdateTime?(Double(seconds))
@@ -216,7 +221,7 @@ private extension AudioRecordManager {
 }
 
 // MARK: - AVAudioRecorderDelegate
-extension AudioRecordManager: AVAudioRecorderDelegate {
+extension AVRecorderWrapper: AVAudioRecorderDelegate {
     
     public func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         print("audioRecorderEncodeErrorDidOccur - \(String(describing: error?.localizedDescription))")
